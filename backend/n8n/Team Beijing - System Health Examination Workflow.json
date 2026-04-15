@@ -1,0 +1,315 @@
+{
+  "name": "Team Beijing - System Health Examination Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */5 6-21 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -864,
+        192
+      ],
+      "id": "cf963924-3413-444d-8003-4d154553a7b2",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fromEmail": "iste501teambeijing@gmail.com",
+        "toEmail": "kw3783@rit.edu; ic2618@rit.edu; asl1416@rit.edu; dl5449@rit.edu",
+        "subject": "[Beijing Flower] Error Alert",
+        "emailFormat": "text",
+        "text": "Hello,\n\nNo image has been added to the Picture table for more than 10 minutes. Please check your monitoring system and general workflow to ensure smooth runs for the future.\n\nThanks,\nTeam Beijing n8n flow",
+        "options": {
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        0
+      ],
+      "id": "4cdaa3a8-7b38-45d8-bdd3-19c46e4a2c75",
+      "name": "Send email - System Error",
+      "webhookId": "5def7643-dd80-41f4-96bd-92492e3ea4f7",
+      "notesInFlow": true,
+      "credentials": {
+        "smtp": {
+          "id": "OOm5b0f6EeEbuJXV",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.sunrise-sunset.org/json?lat=43.1566&lng=-77.6088&formatted=0&tzid=America/New_York",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -640,
+        192
+      ],
+      "id": "0fcd53f4-7480-4b1e-948b-75b14d4998d6",
+      "name": "Grab Sunrise and Sunset"
+    },
+    {
+      "parameters": {
+        "jsCode": "const now = new Date();\nconst sunrise = new Date($input.first().json.results.sunrise);\nconst sunset = new Date($input.first().json.results.sunset);\n\nconst activeStart = new Date(sunrise.getTime() + 60 * 60 * 1000);\nconst activeEnd = new Date(sunset.getTime() - 60 * 60 * 1000);\n\nreturn [{\n  json: {\n    is_active_window: now >= activeStart && now <= activeEnd,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        192
+      ],
+      "id": "367ff8e7-8f3f-409a-8d04-5b5d5af0a71c",
+      "name": "Calculate Active Hours"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e0fa63e0-5ba2-4c3d-b783-dd4d6f6d54c4",
+              "leftValue": "={{ $json.is_active_window }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -192,
+        192
+      ],
+      "id": "ad2a8f19-f487-489b-9e24-c7ab9375b7c6",
+      "name": "If Active Hours"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS (\n    SELECT 1\n    FROM Picture\n    WHERE STR_TO_DATE(\n        REPLACE(REPLACE(SUBSTRING_INDEX(Filename, '.', 1), '_', ' '), '-', ':'),\n        '%Y:%m:%d %H:%i:%s'\n    ) >= NOW() - INTERVAL 11 MINUTE\n) AS record_exists;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        32,
+        96
+      ],
+      "id": "0da3223c-4df9-43af-87b1-8c19ed79e495",
+      "name": "Check Pictures Table",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b5e7ab86-e967-4c61-a962-e9637e9313ea",
+              "leftValue": "={{ $json.record_exists }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        96
+      ],
+      "id": "431ed406-abf0-4876-b7e1-becb70a7d4c6",
+      "name": "If No Image in 11 Minutes"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8756618d-84fd-4acd-90d0-d5a5f0a276d6",
+              "name": "reason",
+              "value": "System is healthy",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        192
+      ],
+      "id": "dacd469f-a0b1-405a-9fde-56123cb75490",
+      "name": "Provide Healthy Flow Result"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "97de58cb-f222-45d4-9ca3-9219a3ebaa39",
+              "name": "reason",
+              "value": "Outside active window - ESP32 sleeping",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        32,
+        288
+      ],
+      "id": "68b64ab1-046b-43a2-a70f-e787cda3b83c",
+      "name": "Provide Sleeping Flow Result"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Grab Sunrise and Sunset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grab Sunrise and Sunset": {
+      "main": [
+        [
+          {
+            "node": "Calculate Active Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Active Hours": {
+      "main": [
+        [
+          {
+            "node": "If Active Hours",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Active Hours": {
+      "main": [
+        [
+          {
+            "node": "Check Pictures Table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Provide Sleeping Flow Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Pictures Table": {
+      "main": [
+        [
+          {
+            "node": "If No Image in 11 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If No Image in 11 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Send email - System Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Provide Healthy Flow Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2bd94c69-751f-4ecf-b164-7e30b1caea9e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b60f0f09e2448d595eff00064fd20d1e72452388b0adcd6aac4245b76fa9c297"
+  },
+  "id": "5DM5g21LXVzdFFOv",
+  "tags": [
+    {
+      "updatedAt": "2026-03-21T02:03:28.449Z",
+      "createdAt": "2026-03-21T02:03:28.449Z",
+      "id": "7Y2RnfEejPdgEK4W",
+      "name": "Prod"
+    }
+  ]
+}
