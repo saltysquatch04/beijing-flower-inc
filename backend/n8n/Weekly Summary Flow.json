@@ -1,0 +1,238 @@
+{
+  "name": "Weekly Summary Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2b8f603f-f1c3-4fce-937b-dd9fa855fca1",
+      "name": "Sundays at 9pm"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n        \"weekly_summary\": {\n            \"type\": \"string\"\n        }\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        224
+      ],
+      "id": "b1d3dfb3-1485-41bb-a284-3724d33989a3",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "//grab json input\nconst items = $input.all();\n\n//declaring combined string\nlet combined = \"Flower Analyses:\\n\\n\";\n\n// adding \nfor (let i=0; i < items.length; i++) {\n  combined += `Summary ${i + 1}\\n`;\n  combined += items[i].json.Summary + \"\\n\\n\";\n}\n\nreturn [{\n  json: {\n    combinedAnalyses: combined\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "b0939719-8773-452e-ad82-1825b145a1ad",
+      "name": "Combine All Analyses"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT Summary\nFROM DailySummary\nWHERE STR_TO_DATE(\n  `Timestamp`, '%Y-%m-%d'\n) >= CURDATE() - INTERVAL 7 DAY",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "802ef832-da2d-47ec-91c7-192de3df2032",
+      "name": "Grab Last Week's Analyses",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "WeeklySummary",
+          "mode": "list",
+          "cachedResultName": "WeeklySummary"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $today }}"
+            },
+            {
+              "column": "Summary",
+              "value": "={{ $json.output.weekly_summary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "d0f73981-9b53-460c-b0c1-131ec9829e3c",
+      "name": "Insert Into weeklySummary Table",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        672,
+        224
+      ],
+      "id": "555d8fea-f52f-4cb0-9c3d-1f7b117d9b59",
+      "name": "GPT-4.1",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "9A0NAMeE332U4hRI",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize these flower analsyes\n{{ $json.combinedAnalyses }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You're purpose is to give a weekly recap for the overall health of the analyses of flowers given to you. In your summarization, highlight if there was any issues with the flowers during the week along with the general hydration status of the flowers. Do not make the recaps too lengthy and focus on overall dehydration status while getting right to the point. Keep the recaps as short as possible while still giving insight into trends and overall hydration status"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "eaa56d88-2657-426d-9bde-d4ea29f880bc",
+      "name": "Generate Weekly Summary",
+      "onError": "continueErrorOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Sundays at 9pm": {
+      "main": [
+        [
+          {
+            "node": "Grab Last Week's Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Weekly Summary",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Analyses": {
+      "main": [
+        [
+          {
+            "node": "Generate Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grab Last Week's Analyses": {
+      "main": [
+        [
+          {
+            "node": "Combine All Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4.1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Weekly Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Weekly Summary": {
+      "main": [
+        [
+          {
+            "node": "Insert Into weeklySummary Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a400b9c0-a902-4a54-84a0-77610ec55e8c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b60f0f09e2448d595eff00064fd20d1e72452388b0adcd6aac4245b76fa9c297"
+  },
+  "id": "S4H21gNf7GJhpuPr",
+  "tags": [
+    {
+      "updatedAt": "2026-03-21T02:03:28.449Z",
+      "createdAt": "2026-03-21T02:03:28.449Z",
+      "id": "7Y2RnfEejPdgEK4W",
+      "name": "Prod"
+    }
+  ]
+}

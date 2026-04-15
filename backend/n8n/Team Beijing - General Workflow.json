@@ -1,0 +1,1280 @@
+{
+  "name": "Team Beijing - General Workflow -  Test DB",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tb-generalworkflowtest",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1456,
+        608
+      ],
+      "id": "d825f587-943a-4c5e-930b-556ed0794bd6",
+      "name": "Image Webhook",
+      "webhookId": "4c90a16b-6055-4a42-8a1d-bc611699091d"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        752
+      ],
+      "id": "eacf2a48-323f-4de7-8fd1-00a0e270ea3b",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "9A0NAMeE332U4hRI",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n        \"is_flower\": {\n            \"type\": \"string\"\n        },\n        \"flower_species\": {\n            \"type\": \"string\"\n        },\n\t\t\"hydration_status\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"analysis\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n        \"recommendation\": {\n\t\t\t\"type\": \"string\"\n\t\t},\n      \"hydration_status_confidence_score\": {\n\t\t\t\"type\": \"string\"\n\t\t}\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -512,
+        752
+      ],
+      "id": "baaf4ec1-d6ec-4bd4-b8a8-5e241777cc59",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please analyze this flower image.\n{{ $binary.image }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert botanist with 20 years of experience, and you can accurately identify dehydration in flowers from images, especially those of sunflowers, zinnias, marigolds, coleus, and impatiens. \n\nYour goal:\n- Analyze the image data carefully.\n- Determine if the image contains discernible flower and soil details: “true”, “false”.\n- Identify the species of flowers in the image: “sunflower”, “zinnia”, “marigold”, “impatiens”, \"coleus\", or “other”.\n- Find dehydration signs. If present, then classify the severity of the dehydration: \"healthy\", \"mild\", \"moderate\", or \"severe\", and provide a confidence score for the analysis.\n- Analyze the dehydration signs thoroughly.\n- Provide comprehensive recommendations on what to do based on:\n- Dehydration signs\n- Soil condition (dry, cracked, brittle, etc.)\n- Extra information provided (use typical seasonal climate patterns for Rochester, NY, on the provided timestamp to assess the likelihood of heat stress (e.g., cold, moderate, hot conditions), and rely primarily on visible plant symptoms)\n\nAlways follow this reasoning process:\n1. Identify the flower species. If the species is not recognizable, set it as \"other\". NEVER leave it as null.\n2. Check for browning, wilting, or drying along the petal or leaf edges.\n3. Look for color dullness or fading and evaluate how uniform the color is (healthy = even tone).\n4. Identify curling, limpness, or drooping.\n5. Assess the soil color and texture.\n6. Base your judgment on these features.\n\n**Indicators of dehydration:**\n\nSunflowers:\nDehydrated: Dehydrated sunflowers might have drooping and wilting leaves. They will not grow large or bloom either. However, if the sunflower is drooping and its petals, back, and seeds are dry, then it might be ready to harvest.\nOver-watered: Over-watered sunflowers might have yellowing leaves and rotting roots.\n\nZinnias:\nDehydrated: Dehydrated zinnias will have pale leaves and stems at the beginning, then brown and crispy, and droop and shrivel up. They may fail to bloom or produce small flowers. The entire zinnia takes on a wilted look. If the zinnia is heat-stressed, its leaves might curl, scorch, and wilt.\nOver-watered: Over-watered zinnias might turn brown and soggy. Their flower heads will droop, and plants may topple over.\n\nMarigolds:\nDehydrated: Dehydrated marigolds’ leaves might be wilting, faded in color, and sometimes appear brown or crispy. If the marigold is heat-stressed, it will still have normal dark green foliage.\nOver-watered: Over-watered marigolds will become floppy or lose their turgidity.\n\nImpatiens:\nDehydrated: Dehydrated impatiens’ leaves will wilt or turn yellow. Water Impatiens when the soil feels slightly damp.\n\nColeus:\nDehydrated: Dehydrated coleus leaves will wilt and droop, hanging down. Slight curling leaves and faded color indicate they're having mild dehydration already. They are sensitive to water and sunlight situations.\n\nSigns of dehydration for the soil: Dry, cracked, and brittle. The color looks lighter.\nSigns of over-watering for the soil: Soggy and have water pooling on the surface. The color looks darker.\n\n- Mild: slight browning or limpness, early edge curling.\n- Moderate: visible curling, multiple discolored patches, partial wilting.\n- Severe: widespread browning, full petal collapse, very dull color.\n\n**Output format:**\nAlways return:\n{\n  “is_flower”: “true | false”,\n  “species”: “sunflower | zinnia | marigold | impatiens | coleus | other”,\n  \"hydration_status\": \"healthy | mild | moderate | severe\",\n  \"hydration_status_confidence_score\": “the confidence score of the hydration status, in the format of x.xx”,\n  \"analysis\": \"text description of visible signs\",\n  \"recommendation\": \"text advice for care\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -656,
+        560
+      ],
+      "id": "06176344-adde-40b3-aae8-390f8cd4885a",
+      "name": "Perform AI analysis",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const emails = [];\n\nfor (const item of $input.all()) {\n  if (item.json?.accepted?.[0]) {\n    emails.push(item.json.accepted[0]);\n  }\n}\n\nreturn [\n  {\n    json: {\n      email_list: emails.join('; ')\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        320
+      ],
+      "id": "7d56fca0-4e55-4333-be04-7706fc9545bd",
+      "name": "Collect receiver emails"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "92c49507-374e-4d43-aae5-3bc2e87a59fb",
+              "leftValue": "={{ $json.output.hydration_status }}",
+              "rightValue": "healthy",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        448
+      ],
+      "id": "f142c46a-27a5-4a02-a770-21f7c770c5e5",
+      "name": "If flowers are unhealthy",
+      "notes": "True - Flowers in the image are unhealthy"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dd7b2e84-08ff-4ba4-b249-5ac9c570ecb1",
+              "leftValue": "={{ $json.output.is_flower }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        464
+      ],
+      "id": "cca3a32c-1618-4259-8eee-607e1396b100",
+      "name": "If the image is valid",
+      "notesInFlow": true,
+      "notes": "True - The image contains visible flower and soil details"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "Notification",
+          "mode": "list",
+          "cachedResultName": "Notification"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $('Image Webhook').item.json.body.timestamp }}{{"
+            },
+            {
+              "column": "Email",
+              "value": "=kw3783@rit.edu; ic2618@rit.edu"
+            },
+            {
+              "column": "Type",
+              "value": "System-Battery"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -16,
+        1088
+      ],
+      "id": "af6fa8b4-c94e-480e-9cbc-f86444fc6941",
+      "name": "Log the battery notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      },
+      "notes": "Notification & Sent, may just need to keep one of them?"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "Notification",
+          "mode": "list",
+          "cachedResultName": "Notification"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $('Image Webhook').item.json.body.timestamp }}"
+            },
+            {
+              "column": "Email",
+              "value": "=kw3783@rit.edu"
+            },
+            {
+              "column": "Type",
+              "value": "System-Agent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        448,
+        912
+      ],
+      "id": "e9d11eb0-99ae-4c14-a159-fb9cdb31f0b3",
+      "name": "Log the agent notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      },
+      "notes": "Need to set up the Email constraint"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "Notification",
+          "mode": "list",
+          "cachedResultName": "Notification"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $('Image Webhook').item.json.body.timestamp }}"
+            },
+            {
+              "column": "Email",
+              "value": "=kw3783@rit.edu; ic2618@rit.edu"
+            },
+            {
+              "column": "Type",
+              "value": "System-Camera"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        608,
+        672
+      ],
+      "id": "f6712b69-b3d2-4ef5-9ee3-efb11eb4b6a1",
+      "name": "Log the camera notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      },
+      "notes": "Need to set up the Email constraint"
+    },
+    {
+      "parameters": {
+        "fromEmail": "iste501teambeijing@gmail.com",
+        "toEmail": "={{ $json.Email }}",
+        "subject": "[Beijing Flower Inc.] Dehydration Alert",
+        "html": "=<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Dehydration Alert – Beijing Flower Inc.</title>\n  <style type=\"text/css\">\n    /* Reset */\n    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }\n    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\n    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }\n    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }\n\n    /* Responsive */\n    @media screen and (max-width: 620px) {\n      .wrapper { width: 100% !important; }\n      .inner-td { padding: 24px 20px !important; }\n    }\n  </style>\n</head>\n<body style=\"margin:0; padding:0;\">\n\n  <!-- Outer wrapper -->\n  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n    <tr>\n      <td align=\"center\" style=\"padding:40px 16px;\">\n\n        <!-- Email card -->\n        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"620\" class=\"wrapper\" style=\"background-color:#233941; border:4px solid #5493AB;\">\n\n          <!--  HEADER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-bottom:4px solid #5493AB; padding:28px 40px;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td align=\"left\" valign=\"middle\">\n                    <span style=\"font-family:Arial,sans-serif; font-size:17px; font-weight:bold; color:#5493AB;\">Beijing Flower Inc.</span>\n                  </td>\n                  <td align=\"right\" valign=\"middle\">\n                    <span style=\"background-color:#BA4D4F; color:#ffffff; font-family:Arial,sans-serif; font-size:12px; font-weight:bold; padding:5px 14px; display:inline-block; letter-spacing:0.5px;\">&#9888; DEHYDRATION ALERT</span>\n                  </td>\n                </tr>\n              </table>\n              <!-- Headline -->\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td style=\"padding-top:18px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:22px; font-weight:bold; color:#ffffff; margin:0 0 6px 0;\">Flower Health Alert</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:13px; color:#ABCCD9; margin:0; line-height:1.5;\">A dehydration event has been detected by the monitoring system.</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  INTRO  -->\n          <tr>\n            <td style=\"padding:28px 40px 0 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0;\">\n                Please review the details below and take action based on the recommendation provided.\n                This alert was generated automatically from the latest photo analysis.\n              </p>\n            </td>\n          </tr>\n\n          <!--  SECTION LABEL: Alert Details  -->\n          <tr>\n            <td style=\"padding:28px 40px 10px 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; font-weight:bold; color:#5493AB; letter-spacing:1.2px; text-transform:uppercase; margin:0;\">Alert Details</p>\n            </td>\n          </tr>\n\n          <!--  DETAILS TABLE  -->\n          <tr>\n            <td style=\"padding:0 40px 28px 40px; background-color:#233941;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"border:2px solid #335867; border-collapse:collapse;\">\n\n                <!-- Table header -->\n                <tr style=\"background-color:#335867;\">\n                  <td width=\"38%\" style=\"padding:11px 16px; font-family:Arial,sans-serif; font-size:11px; font-weight:bold; color:#ABCCD9; text-transform:uppercase; letter-spacing:1px; border-right:1px solid #21292C;\">Field</td>\n                  <td style=\"padding:11px 16px; font-family:Arial,sans-serif; font-size:11px; font-weight:bold; color:#ABCCD9; text-transform:uppercase; letter-spacing:1px;\">Value</td>\n                </tr>\n\n                <!-- Row 1: Timestamp -->\n                <tr style=\"background-color:#233941; border-top:1px solid #335867;\">\n                  <td width=\"38%\" style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:13px; font-weight:bold; color:#ABCCD9; border-right:1px solid #335867; border-top:1px solid #335867;\">Photo Timestamp</td>\n                  <td style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:14px; color:#ffffff; border-top:1px solid #335867;\">{{ $('Image Webhook').item.json.body.timestamp }}</td>\n                </tr>\n\n                <!-- Row 2: Flower Species -->\n                <tr style=\"background-color:#1e3038;\">\n                  <td width=\"38%\" style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:13px; font-weight:bold; color:#ABCCD9; border-right:1px solid #335867; border-top:1px solid #335867;\">Flower Species</td>\n                  <td style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:14px; color:#ffffff; border-top:1px solid #335867;\">{{ $('Perform AI analysis').item.json.output.flower_species.charAt(0).toUpperCase() + $('Perform AI analysis').first().json.output.flower_species.slice(1) }}</td>\n                </tr>\n\n                <!-- Row 3: Hydration Status -->\n                <tr style=\"background-color:#233941;\">\n                  <td width=\"38%\" style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:13px; font-weight:bold; color:#ABCCD9; border-right:1px solid #335867; border-top:1px solid #335867;\">Hydration Status</td>\n                  <td style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:14px; color:#ffffff; border-top:1px solid #335867;\">{{ $('Perform AI analysis').item.json.output.hydration_status.charAt(0).toUpperCase() + $('Perform AI analysis').first().json.output.hydration_status.slice(1) }}</td>\n                </tr>\n\n                <!-- Row 4: Confidence Score -->\n                <tr style=\"background-color:#1e3038;\">\n                  <td width=\"38%\" style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:13px; font-weight:bold; color:#ABCCD9; border-right:1px solid #335867; border-top:1px solid #335867;\">Confidence Score</td>\n                  <td style=\"padding:13px 16px; font-family:Arial,sans-serif; font-size:14px; color:#ffffff; border-top:1px solid #335867;\">{{ $('Perform AI analysis').item.json.output.hydration_status_confidence_score }}</td>\n                </tr>\n\n              </table>\n            </td>\n          </tr>\n\n          <!--  SECTION LABEL: AI Analysis  -->\n          <tr>\n            <td style=\"padding:0 40px 10px 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; font-weight:bold; color:#5493AB; letter-spacing:1.2px; text-transform:uppercase; margin:0;\">AI Analysis</p>\n            </td>\n          </tr>\n\n          <!--  ANALYSIS CARD  -->\n          <tr>\n            <td style=\"padding:0 40px 28px 40px; background-color:#233941;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#21292C; border:2px solid #335867;\">\n                <tr>\n                  <td style=\"padding:20px 24px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0;\">{{ $('Perform AI analysis').item.json.output.analysis }}</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  SECTION LABEL: Recommendation  -->\n          <tr>\n            <td style=\"padding:0 40px 10px 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; font-weight:bold; color:#5493AB; letter-spacing:1.2px; text-transform:uppercase; margin:0;\">Recommendation</p>\n            </td>\n          </tr>\n\n          <!--  RECOMMENDATION CARD  -->\n          <tr>\n            <td style=\"padding:0 40px 36px 40px; background-color:#233941;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#1e3038; border:2px solid #5493AB;\">\n                <tr>\n                  <td style=\"padding:20px 24px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0;\">{{ $('Perform AI analysis').item.json.output.recommendation }}</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  FOOTER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-top:2px solid #335867; padding:20px 40px;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; color:#A1A9BC; text-align:center; margin:0; line-height:1.6;\">\n                This is an automated alert from <span style=\"color:#ABCCD9; font-weight:bold;\">Beijing Flower Inc.</span><br/>\n                Please do not reply to this email directly.\n              </p>\n            </td>\n          </tr>\n\n        </table>\n        <!-- End email card -->\n\n      </td>\n    </tr>\n  </table>\n  <!-- End outer wrapper -->\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=image"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        736,
+        416
+      ],
+      "id": "e6a98c2a-3cd0-4830-b299-a74e4becd66f",
+      "name": "Send the dehydration notification",
+      "webhookId": "32b3a108-8041-4877-ab99-dd4b3a41b2d3",
+      "credentials": {
+        "smtp": {
+          "id": "OOm5b0f6EeEbuJXV",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "Notification",
+          "mode": "list",
+          "cachedResultName": "Notification"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $('Image Webhook').first().json.body.timestamp }}"
+            },
+            {
+              "column": "Email",
+              "value": "={{ $json.email_list }}"
+            },
+            {
+              "column": "Type",
+              "value": "Hydration"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1328,
+        256
+      ],
+      "id": "b7e95b10-a144-4289-8f99-3a4a3e4eb524",
+      "name": "Log the dehydration notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      },
+      "notes": "Notification & Sent, may just need to keep one of them?"
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "Picture",
+          "mode": "list",
+          "cachedResultName": "Picture"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "FileName",
+              "value": "={{ $('Image Webhook').item.json.body.timestamp }}.jpg"
+            },
+            {
+              "column": "FilePath",
+              "value": "=/flower-images/{{ $('Image Webhook').item.json.body.timestamp }}.jpg"
+            },
+            {
+              "column": "HydrationStatus",
+              "value": "={{ $json.output.hydration_status }}"
+            },
+            {
+              "column": "FlowerSpecies",
+              "value": "={{ $json.output.flower_species }}"
+            },
+            {
+              "column": "ConfidenceScore",
+              "value": "={{ $json.output.hydration_status_confidence_score }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        80
+      ],
+      "id": "0f502818-5663-4b05-bf5b-2444c7e514e4",
+      "name": "Log the picture information",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "ImageAnalysis",
+          "mode": "list",
+          "cachedResultName": "ImageAnalysis"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "FileName",
+              "value": "={{ $('Image Webhook').item.json.body.timestamp }}.jpg"
+            },
+            {
+              "column": "Analysis",
+              "value": "={{ $json.output.analysis }}"
+            },
+            {
+              "column": "Recommendation",
+              "value": "={{ $json.output.recommendation }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        272
+      ],
+      "id": "9f1a1ba2-304c-4ce1-9eec-6eb472238672",
+      "name": "Log the image analysis",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "Notification",
+          "mode": "list",
+          "cachedResultName": "Notification"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $('Image Webhook').item.json.body.timestamp }}"
+            },
+            {
+              "column": "Email",
+              "value": "=kw3783@rit.edu; ic2618@rit.edu"
+            },
+            {
+              "column": "Type",
+              "value": "System-Email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1728,
+        592
+      ],
+      "id": "d5c30d89-0a59-4faa-baea-36a4cf78cdc4",
+      "name": "Log the email notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      },
+      "notes": "Need to set up the Email constraint"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/files/{{ $json.body.timestamp }}.jpg",
+        "dataPropertyName": "=image",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -1024,
+        320
+      ],
+      "id": "4a53edcc-086e-48fd-9da2-e3aa57b1aed6",
+      "name": "Save the image to disk",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "262910db-e3eb-4ac5-9ac3-7d8441631e52",
+              "leftValue": "={{ $json.body.battery }}",
+              "rightValue": 3.2,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -896,
+        1072
+      ],
+      "id": "a76791b7-b735-43b1-aed6-47eaa23017e2",
+      "name": "If the battery is lower than 3.2"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS\n  ( SELECT 1\n  FROM Notification\n  WHERE Type = \"System-Camera\"\n  AND Timestamp >= NOW() - INTERVAL 24 HOUR )\nAS record_exists;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -96,
+        624
+      ],
+      "id": "af7fff11-8dbc-46e7-9269-96aaf4da18c1",
+      "name": "Find the last System-Camera notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS\n  ( SELECT 1\n  FROM Notification\n  WHERE Type = \"System-Email\"\n  AND Timestamp >= NOW() - INTERVAL 24 HOUR )\nAS record_exists;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1104,
+        608
+      ],
+      "id": "34811ae5-9076-4ada-b4d1-de52f0298e4d",
+      "name": "Find the last System-Email notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS\n  ( SELECT 1\n  FROM Notification\n  WHERE Type = \"System-Agent\"\n  AND Timestamp >= NOW() - INTERVAL 24 HOUR )\nAS record_exists;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -240,
+        752
+      ],
+      "id": "340d5c13-77fc-479f-a029-6f05f384f29d",
+      "name": "Find the last System-Agent notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT EXISTS\n  ( SELECT 1\n  FROM Notification\n  WHERE Type = \"System-Battery\"\n  AND Timestamp >= NOW() - INTERVAL 24 HOUR )\nAS record_exists;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -656,
+        1008
+      ],
+      "id": "b83a9209-94c6-4d64-8116-b2afe24a6d13",
+      "name": "Find the last System-Battery notification",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7c88d932-0919-4a49-843d-6632554f557f",
+              "leftValue": "={{ $json.record_exists }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        608
+      ],
+      "id": "c762279c-1db5-40cf-8412-2b27d4075c08",
+      "name": "If the email error notification was sent 24h ago"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c62e14c3-32d8-4388-83e6-7be930f2f301",
+              "leftValue": "={{ $json.record_exists }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        624
+      ],
+      "id": "a3b32de0-6e0a-456b-a872-c27fe06e49a5",
+      "name": "If the invalid image notification was sent 24h ago",
+      "notesInFlow": true,
+      "notes": "True - Send the camera notification again"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2186d715-d029-40e3-bd3d-e7561a589422",
+              "leftValue": "={{ $json.record_exists }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -32,
+        832
+      ],
+      "id": "ca98df36-2a85-4252-99e1-417a2471d7d7",
+      "name": "If the agent error notification was sent 24h ago",
+      "notesInFlow": true,
+      "notes": "True - Send the agent notification again"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d586f29e-0374-45ae-915f-50949986bd7f",
+              "leftValue": "={{ $json.record_exists }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -448,
+        1008
+      ],
+      "id": "2d08a2fe-a942-4f40-ad4f-20a237a92288",
+      "name": "If the low battery notification was sent 24h ago",
+      "notesInFlow": true,
+      "notes": "True - Send the battery notification again"
+    },
+    {
+      "parameters": {
+        "fromEmail": "iste501teambeijing@gmail.com",
+        "toEmail": "kw3783@rit.edu; ic2618@rit.edu; asl1416@rit.edu; dl5449@rit.edu",
+        "subject": "[Beijing Flower Inc.] Error Alert",
+        "html": "=<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Workflow Error Alert – Beijing Flower Inc.</title>\n  <style type=\"text/css\">\n    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }\n    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\n    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }\n    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }\n\n    @media screen and (max-width: 620px) {\n      .wrapper { width: 100% !important; }\n      .inner-td { padding: 24px 20px !important; }\n    }\n  </style>\n</head>\n<body style=\"margin:0; padding:0;\">\n\n  <!-- Outer wrapper -->\n  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n    <tr>\n      <td align=\"center\" style=\"padding:40px 16px;\">\n\n        <!-- Email card -->\n        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"620\" class=\"wrapper\" style=\"background-color:#233941; border:4px solid #5493AB;\">\n\n          <!--  HEADER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-bottom:4px solid #5493AB; padding:28px 40px;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td align=\"left\" valign=\"middle\">\n                    <span style=\"font-family:Arial,sans-serif; font-size:17px; font-weight:bold; color:#5493AB;\">Beijing Flower Inc.</span>\n                  </td>\n                  <td align=\"right\" valign=\"middle\">\n                    <span style=\"background-color:#BA4D4F; color:#ffffff; font-family:Arial,sans-serif; font-size:12px; font-weight:bold; padding:5px 14px; display:inline-block; letter-spacing:0.5px;\">&#9888; WORKFLOW ERROR</span>\n                  </td>\n                </tr>\n              </table>\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td style=\"padding-top:18px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:22px; font-weight:bold; color:#ffffff; margin:0 0 6px 0;\">Workflow Error Alert</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:13px; color:#ABCCD9; margin:0; line-height:1.5;\">An error has been detected in your n8n workflow.</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  BODY  -->\n          <tr>\n            <td style=\"padding:32px 40px 28px 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0;\">\n                An error has occurred in your general workflow at the <strong>Send Email</strong> node responsible for emailing end users the hydration alert. Please check to ensure smooth runs for the future.\n              </p>\n            </td>\n          </tr>\n\n          <!--  INFO CARD  -->\n          <tr>\n            <td style=\"padding:0 40px 36px 40px; background-color:#233941;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#21292C; border:2px solid #335867;\">\n                <tr>\n                  <td style=\"padding:20px 24px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:11px; font-weight:bold; color:#5493AB; text-transform:uppercase; letter-spacing:1.2px; margin:0 0 10px 0;\">What to check</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Verify your SMTP credentials are valid and not expired</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Check that the recipient email addresses are correctly configured</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Inspect the execution log in n8n for a detailed error message</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Confirm your email provider has not blocked or rate-limited the sending account</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  FOOTER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-top:2px solid #335867; padding:20px 40px;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; color:#A1A9BC; text-align:center; margin:0; line-height:1.6;\">\n                This is an automated alert from <span style=\"color:#ABCCD9; font-weight:bold;\">Beijing Flower Inc.</span><br/>\n                Please do not reply to this email directly.\n              </p>\n            </td>\n          </tr>\n\n        </table>\n\n      </td>\n    </tr>\n  </table>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1520,
+        592
+      ],
+      "id": "270bd328-5a71-4e99-ab7a-4f2fedbc4013",
+      "name": "Send the email error notification to admins",
+      "webhookId": "a5331954-13b3-4045-a39b-8e1a19de7645",
+      "notesInFlow": true,
+      "credentials": {
+        "smtp": {
+          "id": "OOm5b0f6EeEbuJXV",
+          "name": "SMTP account"
+        }
+      },
+      "notes": "Only has Kelly's email now."
+    },
+    {
+      "parameters": {
+        "fromEmail": "iste501teambeijing@gmail.com",
+        "toEmail": "kw3783@rit.edu; ic2618@rit.edu; asl1416@rit.edu; dl5449@rit.edu",
+        "subject": "[Beijing Flower Inc.] Error Alert",
+        "html": "=<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Image Quality Alert – Beijing Flower Inc.</title>\n  <style type=\"text/css\">\n    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }\n    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\n    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }\n    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }\n\n    @media screen and (max-width: 620px) {\n      .wrapper { width: 100% !important; }\n      .inner-td { padding: 24px 20px !important; }\n    }\n  </style>\n</head>\n<body style=\"margin:0; padding:0;\">\n\n  <!-- Outer wrapper -->\n  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n    <tr>\n      <td align=\"center\" style=\"padding:40px 16px;\">\n\n        <!-- Email card -->\n        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"620\" class=\"wrapper\" style=\"background-color:#233941; border:4px solid #5493AB;\">\n\n          <!--  HEADER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-bottom:4px solid #5493AB; padding:28px 40px;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td align=\"left\" valign=\"middle\">\n                    <span style=\"font-family:Arial,sans-serif; font-size:17px; font-weight:bold; color:#5493AB;\">Beijing Flower Inc.</span>\n                  </td>\n                  <td align=\"right\" valign=\"middle\">\n                    <span style=\"background-color:#C9A223; color:#ffffff; font-family:Arial,sans-serif; font-size:12px; font-weight:bold; padding:5px 14px; display:inline-block; letter-spacing:0.5px;\">&#9888; IMAGE QUALITY ALERT</span>\n                  </td>\n                </tr>\n              </table>\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td style=\"padding-top:18px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:22px; font-weight:bold; color:#ffffff; margin:0 0 6px 0;\">Image Quality Alert</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:13px; color:#ABCCD9; margin:0; line-height:1.5;\">The AI model was unable to clearly analyse the submitted image.</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  BODY  -->\n          <tr>\n            <td style=\"padding:32px 40px 28px 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 16px 0;\">\n                The AI model received a picture without clearly visible flower and soil details. Please check to ensure smooth runs for the future.\n              </p>\n            </td>\n          </tr>\n\n          <!--  INFO CARD  -->\n          <tr>\n            <td style=\"padding:0 40px 36px 40px; background-color:#233941;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#21292C; border:2px solid #335867;\">\n                <tr>\n                  <td style=\"padding:20px 24px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:11px; font-weight:bold; color:#5493AB; text-transform:uppercase; letter-spacing:1.2px; margin:0 0 10px 0;\">What to check</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Ensure the camera lens is clean and unobstructed</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Check that the flower and soil are clearly in frame</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Verify there is sufficient lighting in the image</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  FOOTER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-top:2px solid #335867; padding:20px 40px;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; color:#A1A9BC; text-align:center; margin:0; line-height:1.6;\">\n                This is an automated alert from <span style=\"color:#ABCCD9; font-weight:bold;\">Beijing Flower Inc.</span><br/>\n                Please do not reply to this email directly.\n              </p>\n            </td>\n          </tr>\n\n        </table>\n\n      </td>\n    </tr>\n  </table>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false,
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        352,
+        672
+      ],
+      "id": "c5b61c5a-c86d-44ec-bcbb-e87b22d85065",
+      "name": "Send the invalid image notification to admins",
+      "webhookId": "9b1e7129-82d1-4d9d-99ef-0738fb59af2b",
+      "notesInFlow": true,
+      "credentials": {
+        "smtp": {
+          "id": "OOm5b0f6EeEbuJXV",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "iste501teambeijing@gmail.com",
+        "toEmail": "kw3783@rit.edu; ic2618@rit.edu; asl1416@rit.edu; dl5449@rit.edu",
+        "subject": "[Beijing Flower Inc.] Error Alert",
+        "html": "=<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n  <title>Workflow Error Alert – Beijing Flower Inc.</title>\n  <style type=\"text/css\">\n    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }\n    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }\n    img { border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }\n    body { margin: 0 !important; padding: 0 !important; width: 100% !important; }\n\n    @media screen and (max-width: 620px) {\n      .wrapper { width: 100% !important; }\n      .inner-td { padding: 24px 20px !important; }\n    }\n  </style>\n</head>\n<body style=\"margin:0; padding:0;\">\n\n  <!-- Outer wrapper -->\n  <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n    <tr>\n      <td align=\"center\" style=\"padding:40px 16px;\">\n\n        <!-- Email card -->\n        <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"620\" class=\"wrapper\" style=\"background-color:#233941; border:4px solid #5493AB;\">\n\n          <!--  HEADER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-bottom:4px solid #5493AB; padding:28px 40px;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td align=\"left\" valign=\"middle\">\n                    <span style=\"font-family:Arial,sans-serif; font-size:17px; font-weight:bold; color:#5493AB;\">Beijing Flower Inc.</span>\n                  </td>\n                  <td align=\"right\" valign=\"middle\">\n                    <span style=\"background-color:#BA4D4F; color:#ffffff; font-family:Arial,sans-serif; font-size:12px; font-weight:bold; padding:5px 14px; display:inline-block; letter-spacing:0.5px;\">&#9888; WORKFLOW ERROR</span>\n                  </td>\n                </tr>\n              </table>\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n                <tr>\n                  <td style=\"padding-top:18px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:22px; font-weight:bold; color:#ffffff; margin:0 0 6px 0;\">Workflow Error Alert</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:13px; color:#ABCCD9; margin:0; line-height:1.5;\">An error has been detected in your n8n workflow.</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!-- ═══ BODY ═══ -->\n          <tr>\n            <td style=\"padding:32px 40px 28px 40px; background-color:#233941;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0;\">\n                An error has occurred in your n8n workflow at the <strong>AI Agent</strong> node. Please check to ensure smooth runs for the future.\n              </p>\n            </td>\n          </tr>\n\n          <!--  INFO CARD  -->\n          <tr>\n            <td style=\"padding:0 40px 36px 40px; background-color:#233941;\" class=\"inner-td\">\n              <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background-color:#21292C; border:2px solid #335867;\">\n                <tr>\n                  <td style=\"padding:20px 24px;\">\n                    <p style=\"font-family:Arial,sans-serif; font-size:11px; font-weight:bold; color:#5493AB; text-transform:uppercase; letter-spacing:1.2px; margin:0 0 10px 0;\">What to check</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Review the AI Agent node configuration in n8n</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Check your API credentials are valid and not expired</p>\n                    <p style=\"font-family:Arial,sans-serif; font-size:14px; color:#ffffff; line-height:1.7; margin:0 0 8px 0;\">&#8226; &nbsp;Inspect the execution log in n8n for a detailed error message</p>\n                  </td>\n                </tr>\n              </table>\n            </td>\n          </tr>\n\n          <!--  FOOTER  -->\n          <tr>\n            <td style=\"background-color:#21292C; border-top:2px solid #335867; padding:20px 40px;\" class=\"inner-td\">\n              <p style=\"font-family:Arial,sans-serif; font-size:12px; color:#A1A9BC; text-align:center; margin:0; line-height:1.6;\">\n                This is an automated alert from <span style=\"color:#ABCCD9; font-weight:bold;\">Beijing Flower Inc.</span><br/>\n                Please do not reply to this email directly.\n              </p>\n            </td>\n          </tr>\n\n        </table>\n\n      </td>\n    </tr>\n  </table>\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false,
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        912
+      ],
+      "id": "f0017a22-c995-4f67-b113-99671a231fd9",
+      "name": "Send the agent error notification to admins",
+      "webhookId": "8fd76d3c-f7da-415a-bbb7-6fc226ffcbaf",
+      "notesInFlow": true,
+      "credentials": {
+        "smtp": {
+          "id": "OOm5b0f6EeEbuJXV",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "iste501teambeijing@gmail.com",
+        "toEmail": "kw3783@rit.edu; ic2618@rit.edu; asl1416@rit.edu; dl5449@rit.edu",
+        "subject": "[Beijing Flower] Low Battery Alert",
+        "emailFormat": "text",
+        "text": "=Hello,\n\nYour monitoring system has triggered the low battery alert (battery left: {{ $('Image Webhook').item.json.body.battery }}). Please check to ensure smooth runs for the future.\n\nThanks,\nTeam Beijing n8n flow",
+        "options": {
+          "appendAttribution": false,
+          "attachments": ""
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        992
+      ],
+      "id": "283e4b81-7663-4022-98b7-d9576e138e84",
+      "name": "Send the low battery notification to admins",
+      "webhookId": "b585b284-d5ba-47ee-a7ad-ffcaabe24c13",
+      "notesInFlow": true,
+      "credentials": {
+        "smtp": {
+          "id": "OOm5b0f6EeEbuJXV",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT Email \nFROM Users \nWHERE Notification = 1\nAND NOT EXISTS (\n    SELECT 1 \n    FROM Notification \n    WHERE Timestamp >= NOW() - INTERVAL 24 HOUR \n    AND Type = 'Hydration'\n    AND INSTR(Notification.Email, Users.Email) > 0\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        288,
+        432
+      ],
+      "id": "463378e7-f80a-40ee-830a-56f779d4a667",
+      "name": "Find subscribed users",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d2ff3815-df83-4809-86a2-e23253158f6e",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        432
+      ],
+      "id": "63de8ede-d409-43b0-825b-051ca69df0da",
+      "name": "If user exists",
+      "notes": "True - Send the dehydration notification again"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nif ($input.first().json.output.flower_species == null) {\n  $input.first().json.output.flower_species = \"coleus\";\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        384
+      ],
+      "id": "e82b3598-b87f-40c4-9d0b-a22343a76eee",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Image Webhook": {
+      "main": [
+        [
+          {
+            "node": "Perform AI analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save the image to disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Perform AI analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Perform AI analysis",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform AI analysis": {
+      "main": [
+        [
+          {
+            "node": "If the image is valid",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find the last System-Agent notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If flowers are unhealthy": {
+      "main": [
+        [
+          {
+            "node": "Find subscribed users",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the image is valid": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find the last System-Camera notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the dehydration notification": {
+      "main": [
+        [
+          {
+            "node": "Collect receiver emails",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find the last System-Email notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the battery is lower than 3.2": {
+      "main": [
+        [
+          {
+            "node": "Find the last System-Battery notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the last System-Camera notification": {
+      "main": [
+        [
+          {
+            "node": "If the invalid image notification was sent 24h ago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the last System-Email notification": {
+      "main": [
+        [
+          {
+            "node": "If the email error notification was sent 24h ago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the last System-Agent notification": {
+      "main": [
+        [
+          {
+            "node": "If the agent error notification was sent 24h ago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the last System-Battery notification": {
+      "main": [
+        [
+          {
+            "node": "If the low battery notification was sent 24h ago",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the email error notification was sent 24h ago": {
+      "main": [
+        [
+          {
+            "node": "Send the email error notification to admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the invalid image notification was sent 24h ago": {
+      "main": [
+        [
+          {
+            "node": "Send the invalid image notification to admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the agent error notification was sent 24h ago": {
+      "main": [
+        [
+          {
+            "node": "Send the agent error notification to admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If the low battery notification was sent 24h ago": {
+      "main": [
+        [
+          {
+            "node": "Send the low battery notification to admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the email error notification to admins": {
+      "main": [
+        [
+          {
+            "node": "Log the email notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the invalid image notification to admins": {
+      "main": [
+        [
+          {
+            "node": "Log the camera notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the agent error notification to admins": {
+      "main": [
+        [
+          {
+            "node": "Log the agent notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send the low battery notification to admins": {
+      "main": [
+        [
+          {
+            "node": "Log the battery notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect receiver emails": {
+      "main": [
+        [
+          {
+            "node": "Log the dehydration notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find subscribed users": {
+      "main": [
+        [
+          {
+            "node": "If user exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If user exists": {
+      "main": [
+        [
+          {
+            "node": "Send the dehydration notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Log the picture information",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log the image analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If flowers are unhealthy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ed51eba0-fd5e-4944-a9c4-902b6b667734",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b60f0f09e2448d595eff00064fd20d1e72452388b0adcd6aac4245b76fa9c297"
+  },
+  "id": "E47wTQQxV6g8QYg4",
+  "tags": [
+    {
+      "updatedAt": "2026-03-21T02:03:28.449Z",
+      "createdAt": "2026-03-21T02:03:28.449Z",
+      "id": "7Y2RnfEejPdgEK4W",
+      "name": "Prod"
+    }
+  ]
+}

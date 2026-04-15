@@ -1,0 +1,237 @@
+{
+  "name": "Daily Summary Flow",
+  "nodes": [
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n        \"daily_summary\": {\n            \"type\": \"string\"\n        }\n\t}\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        816,
+        224
+      ],
+      "id": "4eb6cea1-20ea-4bdd-8133-a372dba6348c",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "//grab json input\nconst items = $input.all();\n\n//declaring combined string\nlet combined = \"Flower Analyses:\\n\\n\";\n\n// adding \nfor (let i=0; i < items.length; i++) {\n  combined += `Analysis ${i + 1}\\n`;\n  combined += items[i].json.Analysis + \"\\n\\n\";\n}\n\nreturn [{\n  json: {\n    combinedAnalyses: combined\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "28e7c95a-3821-43d9-855e-75a9870a0195",
+      "name": "Combine All Analyses"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT Analysis\nFROM ImageAnalysis\nWHERE STR_TO_DATE(\n  SUBSTRING_INDEX(FileName, '.', 1), '%Y-%m-%d'\n) >= CURDATE()",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a6300826-9309-4ab4-8d26-fd39241f8c4b",
+      "name": "Grab Today's Analyses",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 21
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2cb116b2-1758-4f35-9607-b470aab64937",
+      "name": "Everyday at 9pm"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Summarize these flower analsyes\n\n{{ $json.combinedAnalyses }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You're purpose is to give a daily summary of the flower analyses given to you. Important information to look for is degraded dehydration status and any other issues with the flowers. The analysis should be detailed but also straight to the point. Listing off specific analyses and their dehydration is irrelevant and the overall status of the flowers is more important while still making the report as short as possible."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "ba9e1dc1-19e5-4195-bd59-f098e2537337",
+      "name": "Generate Daily Summary",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4.1",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        672,
+        224
+      ],
+      "id": "65dce3a5-0025-49ae-8701-8abdfbd20265",
+      "name": "GPT-4.1",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "9A0NAMeE332U4hRI",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": {
+          "__rl": true,
+          "value": "DailySummary",
+          "mode": "list",
+          "cachedResultName": "DailySummary"
+        },
+        "dataMode": "defineBelow",
+        "valuesToSend": {
+          "values": [
+            {
+              "column": "Timestamp",
+              "value": "={{ $today }}"
+            },
+            {
+              "column": "Summary",
+              "value": "={{ $json.output.daily_summary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1040,
+        -16
+      ],
+      "id": "3d59733d-2946-479e-992a-235e0cc830d6",
+      "name": "Insert into DailyAnalysis Table",
+      "credentials": {
+        "mySql": {
+          "id": "rHXV5T5Zd6AsZdSK",
+          "name": "n8n"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Generate Daily Summary",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine All Analyses": {
+      "main": [
+        [
+          {
+            "node": "Generate Daily Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Grab Today's Analyses": {
+      "main": [
+        [
+          {
+            "node": "Combine All Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Everyday at 9pm": {
+      "main": [
+        [
+          {
+            "node": "Grab Today's Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Daily Summary": {
+      "main": [
+        [
+          {
+            "node": "Insert into DailyAnalysis Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4.1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Daily Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e7b45316-71ba-4059-a8ee-6eb116a90812",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b60f0f09e2448d595eff00064fd20d1e72452388b0adcd6aac4245b76fa9c297"
+  },
+  "id": "82RP1ENi7uq1QgvY",
+  "tags": [
+    {
+      "updatedAt": "2026-03-21T02:03:28.449Z",
+      "createdAt": "2026-03-21T02:03:28.449Z",
+      "id": "7Y2RnfEejPdgEK4W",
+      "name": "Prod"
+    }
+  ]
+}
