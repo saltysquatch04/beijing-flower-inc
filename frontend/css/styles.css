@@ -1,0 +1,1049 @@
+body {
+    font-family: "K2D", sans-serif;
+    background-color: #21292C;
+    color: white;
+}
+
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-grid {
+    display: grid !important;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    grid-template-columns: 1fr;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+    .modal-flower-img {
+        max-height: 60vh;
+        object-fit: contain;
+    }
+}
+
+/* Styling for the text-uppercase labels */
+.uppercase {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+@media (min-width: 991px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-areas:
+            "calendar    flower"
+            "chart       flower"
+            "weeksum     dailyweather";
+        grid-template-rows: auto 1fr auto;
+        align-items: stretch;
+    }
+
+    .grid-calendar     { grid-area: calendar; }
+    .grid-flower       { grid-area: flower; }
+    .grid-chart        { grid-area: chart; }
+    .grid-weeksum      { grid-area: weeksum; }
+    .grid-dailyweather { grid-area: dailyweather; }
+}
+
+@media (max-width: 991px) {
+    .grid-flower > div,
+    .grid-chart > div {
+        height: auto !important;
+    }
+}
+
+.grid-flower {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-flower > div {
+    flex: 1;
+    min-height: 0;
+}
+
+.grid-chart {
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-chart > div {
+    flex: 1;
+    min-height: 0;
+}
+
+.grid-chart .chart-container {
+    min-height: 150px;
+}
+
+.grid-dailyweather {
+    display: flex;
+    flex-direction: column;
+    /* This ensures it fills the grid cell height provided by 'align-items: stretch' */
+    height: 100%; 
+}
+
+.grid-dailyweather > .row {
+    flex: 1;
+}
+
+@media (max-width: 576px) {
+    .container-fluid.px-0 {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .grid-chart .chart-container {
+        min-height: 120px;
+        padding: 0.5rem;
+    }
+    .masthead {
+        flex-direction: row !important; 
+        justify-content: space-between !important;
+        align-items: center !important;
+        height: 60px; /* Standard height */
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+    }
+
+    .masthead-title {
+        font-size: 1.1rem !important;
+        max-width: 70%; /* Prevents title from pushing the button off screen */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .dashboard-grid {
+        gap: 0.3rem;
+        padding: 0.3rem;
+    }
+
+    .p-3 {
+        padding: 0.75rem !important;
+    }
+
+    .fs-6 {
+        font-size: 0.9rem !important;
+    }
+
+    .fs-5 {
+        font-size: 1rem !important;
+    }
+    .line-clamp-6 {
+        line-clamp: 3;
+        -webkit-line-clamp: 3;
+    }
+    .mail-dropdown {
+        font-size: 0.85rem;
+    }
+
+    .mail-dropdown .dropdown-item {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .modal-flower-img {
+        max-height: 40vh !important; /* Shorter image on phones */
+        object-fit: cover;
+    }
+
+    .small-mobile-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .summary-text {
+        font-size: 1rem !important;
+        line-height: 1.6 !important;
+    }
+    
+    /* Remove borders on full-screen mobile to save space */
+    .modal-fullscreen-sm-down .modal-content {
+        border: none !important;
+        border-radius: 0 !important;
+    }
+    .custom-mobile-modal {
+        /* This ensures horizontal centering */
+        margin-left: auto !important;
+        margin-right: auto !important;
+        
+        /* Sets the width to 94% of the screen */
+        width: 94% !important; 
+        max-width: 94% !important;
+        
+        /* Flex positioning for vertical centering */
+        display: flex !important;
+        align-items: center !important;
+        min-height: calc(100% - 1rem);
+    }
+
+    .custom-mobile-modal .modal-content {
+        margin: 0 auto;
+        border-radius: 1.25rem !important; /* Softer rounded corners for mobile */
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .summary-text-mobile {
+        font-size: 0.95rem !important;
+        letter-spacing: 0.2px;
+    }
+
+    .modal-body {
+        max-height: 80vh; /* Prevent modal from going off-screen vertically */
+        overflow-y: auto;
+    }
+
+    body.modal-open {
+        overflow: hidden; /* Prevents the background from scrolling while modal is open */
+    }
+
+    html, body {
+        overflow-x: hidden;
+        position: relative;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+}
+
+
+.text-tertiary {
+    color: #AB5492 !important;
+}
+
+.bg-primary {
+    background-color: #21292C !important;
+}
+
+.bg-secondary {
+    background-color: #233941 !important;
+}
+
+.bg-tertiary {
+    background-color: #AB5492 !important;
+}
+
+.bg-border-color {
+    background-color: #5493AB;
+}
+
+.primary-border {
+    border-color: #5493AB !important;
+    border-width: thin !important;
+}
+
+.tertiary-border {
+    border-color: #AB5492 !important;
+    border-width: thin !important;
+}
+
+.btn-primary {
+    color: #21292C!important;
+    background-color: #5493AB !important;
+    border-radius: 12px !important;
+    border: none;
+}
+
+.btn-secondary {
+    color: white !important;
+    background-color: #233941 !important;
+    border-radius: 12px !important;
+    border: none;
+}
+
+.btn-tertiary {
+    color: #fff !important; 
+    background-color: #AB5492 !important; 
+    border-color: #AB5492 !important; 
+    border-radius: 12px !important;
+}
+
+.btn-nav {
+    border: none !important;
+    color: white !important;
+    background-color: transparent !important;
+    padding: 0px !important;
+}
+
+.btn-months-left {
+    color: #fff !important; 
+}
+
+.btn-months-right {
+    color: #fff !important; 
+}
+
+.disabled-month {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.btn-months-left:hover,
+.btn-months-right:hover {
+    background-color: #2f3b40; 
+    color: #fff !important;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    transform: scale(0.95);
+}
+
+.btn-time-select {
+    color: white !important;
+    background-color: none;
+    border-color: white;
+    border-radius: 18px;
+    font-size: x-small;
+}
+
+.btn-time-select:hover {
+    background-color: #AB5492;
+}
+
+.disabled-day {
+    color: rgba(255,255,255,0.3) !important;
+    cursor: default !important;
+}
+
+.disabled-day:hover {
+    background: none !important;
+}
+
+.has-tooltip {
+    position: relative;
+}
+
+.has-tooltip::after {
+    content: "Today";
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    background-color: #21292C;
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    border-radius: 5px;
+    border: 1px solid #335867;
+
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.has-tooltip:hover::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-2px);
+}
+
+.has-tooltip::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    border: 5px solid transparent;
+    border-top-color: #21292C;
+
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.has-tooltip:hover::before {
+    opacity: 1;
+}
+
+.btn-time-nav {
+    background-color: #21292C;
+    color: #fff;
+    border: 1px solid #335867;
+}
+
+.btn-time-nav:hover {
+    background-color: #2f3b40;
+}
+
+.disabled-time {
+    opacity: 0.3;
+    cursor: default;
+}
+
+.btn-outline-tertiary {
+    color: #AB5492 !important;
+    background-color: none !important;
+    border-color: #AB5492 !important;
+}
+
+.fs-medium {
+    font-size: medium;
+}
+
+.fs-small {
+    font-size: small;
+}
+
+.fs-xsmall {
+    font-size: x-small;
+}
+
+.masthead {
+    background: #233941;
+    color: white;
+    padding: 12px 20px;
+    height: 60px;
+    border-bottom: 1px solid #335867;height: 60px;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    overflow: visible !important;
+}
+
+.masthead-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 70%;position: static !important; 
+    margin: 0 !important;
+    white-space: nowrap;
+    text-overflow: ellipsis; /* Adds '...' if title is too long for the screen */
+    padding-right: 10px;    /* Keeps a gap so it doesn't touch the button */
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mail-dropdown {
+    background-color: #21292C;
+    color: #fff;
+    border: 1px solid #335867;
+    width: 380px;
+    max-width: 95vw;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* Message text */
+.mail-dropdown p {
+    color: #e4e6eb;
+    margin-bottom: 0;
+}
+
+/* Timestamp */
+.mail-dropdown small {
+    color: rgba(255, 255, 255, 0.6); 
+}
+
+/* Divider */
+.mail-dropdown .border-bottom {
+    border-color: #335867 !important;
+}
+
+/* Each message item */
+.mail-dropdown .dropdown-item {
+    white-space: normal;
+    padding: 8px;
+}
+
+/* Hover effect*/
+.mail-dropdown .dropdown-item:hover {
+    background-color: #2f3b40;
+}
+
+.mail-dropdown .dropdown-item:active {
+    background-color: #2f3b40;
+    color: #fff;
+}
+
+.mail-dropdown {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.mail-dropdown .dropdown-item + .dropdown-item {
+    border-top: 1px solid #335867;
+}
+
+.mail-toggle[aria-expanded="true"] .caret-icon {
+    transform: rotate(180deg);
+}
+
+.caret-icon {
+    transition: transform 0.25s ease, opacity 0.2s;
+    opacity: 0.7;
+}
+
+.mail-toggle:hover .caret-icon {
+    opacity: 1;
+}
+
+.mail-toggle.open .caret-icon {
+    transform: rotate(180deg);
+}
+
+/* Styling for the Hamburger Button */
+.hamburger-btn {
+    border-color: #335867;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Style when the dropdown is OPEN (Bootstrap adds .show to the button) */
+.hamburger-btn.show, 
+.hamburger-btn:active, 
+.hamburger-btn:hover {
+    background-color: #335867 !important;
+    border-color: #4da3ff !important;
+    color: #fff !important;
+    box-shadow: 0 0 8px rgba(77, 163, 255, 0.4);
+}
+
+.hamburger-btn:focus, .hamburger-btn:active {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.hamburger-btn.show {
+    background-color: #335867 !important;
+    border-color: #4da3ff !important;
+}
+
+.dropdown-menu {
+    animation: fadeIn 0.2s ease-in-out;
+    background-color: #21292C;
+    border: 1px solid #335867;
+    color: #fff;
+    margin-top: 0.5rem !important;
+    z-index: 9999 !important;
+}
+
+.dropdown-item {
+    color: #e4e6eb;
+}
+
+.dropdown-item:hover {
+    background-color: #2f3b40;
+    color: #fff;
+}
+
+.dropdown-menu-end {
+    right: 0;
+    left: auto;
+    margin-top: 0.5rem !important;
+    border: 1px solid #335867 !important;
+}
+
+/* Sub-menu Arrow Indicator */
+.sub-menu-arrow {
+    transition: transform 0.3s ease;
+    font-size: 0.8rem;
+    opacity: 0.7;
+}
+
+/* Rotate the arrow when the collapse is visible */
+[aria-expanded="true"] .sub-menu-arrow {
+    transform: rotate(180deg);
+    opacity: 1;
+}
+
+/* Ensure the collapse container is dark */
+#mobileNotifCollapse {
+    background-color: #161c1e !important; /* Deepest dark */
+}
+
+/* Specific styling for the inner notification area */
+.mobile-notif-inner {
+    background-color: #161c1e;
+}
+
+/* This targets the individual notification rows */
+.border-secondary-subtle {
+    border-color: rgba(51, 88, 103, 0.3) !important;
+}
+
+/* Optional: Make the "Notifications" button look slightly different when open */
+[aria-expanded="true"].dropdown-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    font-weight: bold;
+}
+
+/* Custom scrollbar for the notification list (Mobile Chrome/Safari) */
+.notif-scroll-container::-webkit-scrollbar {
+    width: 4px;
+}
+.notif-scroll-container::-webkit-scrollbar-thumb {
+    background: #335867;
+    border-radius: 10px;
+}
+
+.container-fluid.px-0 {
+    position: relative;
+    z-index: 1050; 
+}
+
+.chart-container {
+    width: 100%;
+    height: 100%; 
+    position: relative;
+    min-height: 200px;
+}
+
+.calendar-day {
+    padding: 6px;
+    border-radius: 6px;
+    color: white;
+    transition: 0.2s;
+}
+
+.calendar-day:hover {
+    background-color: #2f3b40;
+    cursor: pointer;
+}
+
+.calendar-day.today {
+    border: 1px solid #335867; 
+}
+
+/* Selected day */
+.calendar-day.selected {
+    background-color: #AB5492;
+    color: white;
+}
+
+.btn-time-select {
+    font-size: small !important;
+    background: transparent;
+    color: white;
+    border: 1px solid #335867;
+    transition: 0.2s;
+}
+
+.btn-time-select:hover {
+    background-color: #2f3b40;
+}
+
+/* Selected time */
+.btn-time-select.active-time {
+    font-size: small !important;
+    background-color: #AB5492;
+    border-color: #AB5492;
+    color: white;
+}
+
+.weather-widget { 
+    background: linear-gradient(to bottom, #194556, #3c8baa, #80c4dc); 
+    color: #fff; 
+    height: 150px; 
+}
+
+img {
+    max-height: 200px;
+    object-fit: cover;
+}
+
+
+/* flower level graphic  */
+.ring-wrapper {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ring {
+    width: 100%;       
+    height: 100%;      
+    border-radius: 50%;
+    mask: radial-gradient(circle, transparent 60%, black 61%);
+    -webkit-mask: radial-gradient(circle, transparent 60%, black 61%);
+    transition: background 0.5s ease-in-out;
+}
+
+.ring-center {
+    position: absolute;
+    width: 66%;
+    height: 66%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ring-center svg {
+    width: 70%;
+    height: auto;
+}
+
+.line-clamp-3 {
+    line-clamp: 3;
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* Limit to 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.line-clamp-6 {
+    line-clamp: 6;
+    display: -webkit-box;
+    -webkit-line-clamp: 6; /* Limit to 3 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.modal-content {
+    background-color: #233941 !important;
+}
+
+.modal-header {
+    border-bottom: 1px solid #335867;
+}
+
+.modal-backdrop {
+    z-index: 1060 !important;
+}
+
+/* Ensure the modal itself sits above the backdrop */
+.modal {
+    z-index: 1070 !important;
+}
+
+/* settings page */
+
+.profile-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #1e2a2f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #5493AB, #AB5492);
+}
+
+.edit-item {
+    cursor: pointer;
+    padding: 8px 0;
+}
+.edit-item:hover {
+    opacity: 0.8;
+}
+.edit-item.active { 
+    color:#AB5492; 
+    font-weight: 600; 
+}
+
+.edit-panel { 
+    display: none; 
+    padding: 24px !important;
+    border-radius: 16px;
+} 
+.edit-panel.active { 
+    display: block; 
+}
+
+.back-link {
+    color: white;
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: 0.2s;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.TeamName{
+    padding-top: 30px;
+    padding-bottom: 30px;
+    margin-left: 5%;
+}
+
+.doubleLayers{
+    display: flex;
+    justify-content: center;
+}
+
+.outer-layer{
+    align-items: center;
+    background-color: #233941;
+    width: 90%;
+}
+
+.outer-layer img{
+    display: block;
+    margin: auto;
+    padding-bottom: 30px;
+    width: 150px;
+
+}
+
+.inner-layer{
+    display: block;
+    margin: auto;
+    background-color: #21292C;
+    width: 60%;
+    padding-left: 40px;
+    padding-right: 40px;
+
+}
+
+.outer-layer, .inner-layer{
+    border: 3px solid #5493AB;
+    border-radius: 45px;
+    padding-top: 50px;
+    padding-bottom: 70px;
+}
+
+.greeting{ 
+    text-align: center
+}
+
+.form {
+    text-align: center;
+}
+/* 
+.input, .passwordIcon, .accountInput{
+    width: 70%;
+    margin: 0 auto;
+} */
+
+.accountInput {
+    width: 70%;
+    margin: 0 auto;
+}
+
+.input, .passwordIcon {
+    width: 100%;
+}
+
+
+.accountInput {
+    width: 70%;
+    margin: 0 auto;
+}
+
+.input, .passwordIcon {
+    width: 100%;
+}
+
+.passwordIcon {
+    position: relative;
+}
+
+.input label, .passwordIcon label{
+    display: block;
+    text-align: left;
+    color: white;
+    margin-top: 15px;
+}
+
+.input input, .passwordIcon input{
+    padding: 8px;
+    margin-top: 5px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid #aaa;
+    color: white;
+}
+
+.submit{
+    background-color: #5493AB;
+    color: #21292C;
+}
+
+.Update, .Account{ 
+    color: #5493AB;
+    text-decoration: none;
+}
+
+.Update{
+    display: block;
+    text-align: right;
+    width: 85%;
+}
+
+.submit{
+    width: 22%;
+    padding: 10px;
+    border-radius: 20px;
+    background-color: #5493AB;
+    cursor: pointer;
+}
+
+.Account{
+    display: block;
+    margin-top: 14px;
+}
+
+
+.createAccount{
+    text-align: center;
+    padding-bottom: 30px;
+}
+
+.accountInput input{
+    padding: 8px;
+    margin-top: 5px;
+    background: transparent;
+    border: 2px solid #FFFFFF;
+    border-radius: 20px;
+    color: white;
+    width: 100%;
+}
+
+.accountInput input::placeholder{
+    color: white;
+    width: 70%;
+}
+
+.nameInput, .userInput, .passwordInput{
+    padding-bottom: 20px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.passwordIcon input{
+    width: 100%;
+}
+
+.toggle-password{
+    position: absolute;
+    right: 27px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.notificationCheck input[type="checkbox"] {
+    width: auto;
+    border: none;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.notificationCheck {
+    width: 70%;
+    margin: 0 auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+
+    /* Login Page code */
+    .outer-layer {
+        width: 96%;
+        border-radius: 24px;
+        padding-top: 30px;
+        padding-bottom: 40px;
+    }
+ 
+    .inner-layer {
+        width: 90%;
+        padding-left: 20px;
+        padding-right: 20px;
+        border-radius: 24px;
+        padding-top: 30px;
+        padding-bottom: 40px;
+    }
+ 
+    .outer-layer img {
+        width: 110px;
+    }
+
+    .accountInput {
+        width: 90%;
+        /* margin: 0 auto; */
+    }
+
+    .input, .passwordIcon {
+        width: 100%;
+    }
+    
+    .submit {
+        width: 80%;
+        padding: 12px;
+        font-size: 16px;
+        margin-top: 8px;
+    }
+  
+    .TeamName {
+        margin-left: 4%;
+        font-size: 21px;
+        padding-top: 18px;
+        padding-bottom: 18px;
+    }
+
+    /* Register Page code */ 
+    .userInput {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+ 
+    .toggle-password{
+        width: 10%;
+        padding-top: 6px;
+    }
+ 
+    /* Setting Page code */
+    .settings-outer {
+        height: auto !important;
+        min-height: unset !important;
+    }
+ 
+    .col-5,
+    .col-7 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+    }
+ 
+    .col-5 {
+        margin-bottom: 16px;
+    }
+ 
+    .edit-panel .d-flex.gap-2 {
+        flex-direction: column;
+    }
+ 
+    .edit-panel .btn {
+        width: 100% !important;
+    }
+ 
+    .edit-panel .form-control {
+        width: 100% !important;
+    }
+
+}
